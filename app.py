@@ -88,28 +88,34 @@ with col2:
                     max_turns=max_turns,
                 )
 
-                # Display the conversation history in a professional, user-friendly way
-                st.subheader('Conversation Transcript:')
-                
-                # Assign different colors for each agent
-                agent_1_color = "#3498db"  # Blue for Agent 1
-                agent_2_color = "#e74c3c"  # Red for Agent 2
+                # Debugging: Print the chat result to inspect it
+                st.write(f"Chat result: {chat_result}")
 
-                for i, msg in enumerate(chat_result.chat_history, 1):
-                    # Determine which color to use for each agent
-                    color = agent_1_color if msg['name'] == agent_1 else agent_2_color
-                    # Display the conversation with bold agent names, uppercase and colored text
-                    st.markdown(f"<strong style='text-transform: uppercase; color:{color};'>"
-                                f"TURN {i} ({msg['name']}):</strong> <span style='color:{color};'>{msg['content']}</span>", 
-                                unsafe_allow_html=True)
+                if chat_result is None:
+                    st.error("Error: No chat history returned. Please check the ConversableAgent configuration.")
+                else:
+                    # Display the conversation history in a professional, user-friendly way
+                    st.subheader('Conversation Transcript:')
+                    
+                    # Assign different colors for each agent
+                    agent_1_color = "#3498db"  # Blue for Agent 1
+                    agent_2_color = "#e74c3c"  # Red for Agent 2
 
-                # Check for termination message
-                if len(chat_result.chat_history) > 0:
-                    last_message = chat_result.chat_history[-1]
-                    if is_termination_msg(last_message, agent_1_termination_phrases) or is_termination_msg(last_message, agent_2_termination_phrases):
-                        st.success("The conversation ended as per the termination logic.")
-                    else:
-                        st.info("The conversation is ongoing.")
+                    for i, msg in enumerate(chat_result.chat_history, 1):
+                        # Determine which color to use for each agent
+                        color = agent_1_color if msg['name'] == agent_1 else agent_2_color
+                        # Display the conversation with bold agent names, uppercase and colored text
+                        st.markdown(f"<strong style='text-transform: uppercase; color:{color};'>"
+                                    f"TURN {i} ({msg['name']}):</strong> <span style='color:{color};'>{msg['content']}</span>", 
+                                    unsafe_allow_html=True)
+
+                    # Check for termination message
+                    if len(chat_result.chat_history) > 0:
+                        last_message = chat_result.chat_history[-1]
+                        if is_termination_msg(last_message, agent_1_termination_phrases) or is_termination_msg(last_message, agent_2_termination_phrases):
+                            st.success("The conversation ended as per the termination logic.")
+                        else:
+                            st.info("The conversation is ongoing.")
 
             except Exception as e:
                 st.error(f"An error occurred: {e}")
