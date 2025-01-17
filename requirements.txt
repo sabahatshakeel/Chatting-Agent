@@ -4,5 +4,5 @@ matplotlib
 numpy
 pandas
 yfinance
-openai
+openai==0.27.8 
 
