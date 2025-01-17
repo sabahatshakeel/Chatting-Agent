@@ -4,3 +4,5 @@ matplotlib
 numpy
 pandas
 yfinance
+openai
+autogen
