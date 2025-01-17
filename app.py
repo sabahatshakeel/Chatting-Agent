@@ -1,20 +1,21 @@
 import streamlit as st
 import os
 import openai
-#from dotenv import load_dotenv, find_dotenv
+from dotenv import load_dotenv
 from autogen import ConversableAgent
 
-# Load environment variables (e.g., OpenAI API key)
-#_ = load_dotenv(find_dotenv())  # Read local .env file
-#openai.api_key = os.environ.get('OPENAI_API_KEY')
-openai.api_key = st.secrets["API_KEY"]
+# Load environment variables from .env file
+load_dotenv()  # This loads the .env file, automatically detecting it in the root folder
+
+# Set OpenAI API key from environment variables
+openai.api_key = os.getenv('OPENAI_API_KEY')  # Get the API key from the .env file
 
 # Sidebar Layout (Column 1 for logo, company, and developers' names)
 with st.sidebar:
     st.image("logo.jpg", width=150)  # Adjust the width of the logo
     st.markdown("""
         # Powered by Aibytec 
-        *Developers: Anum Zeeshan & Sajid Ameen*
+        *Developers: Anum Zeeshan & Sabahat Shakeel*
     """)
 
 # Main Layout (Column 2 for the rest of the app content)
@@ -22,7 +23,7 @@ col1, col2 = st.columns([1, 5])  # 1:5 ratio for sidebar to content
 
 with col2:
     # Streamlit App Title
-    st.title('Conversable Agents')
+    st.title('PODCASTERS')
 
     # Define the LLM configuration
     llm_config = {"model": "gpt-3.5-turbo"}
@@ -34,8 +35,8 @@ with col2:
 
     # User Input to define Agent names
     st.subheader('Define Agent Names')
-    agent_1 = st.text_input("Enter the First Agent name:", "Agent-1")
-    agent_2 = st.text_input("Enter the Second Agent name:", "Agent-2")
+    agent_1 = st.text_input("Enter the First Agent name:", "Huberman-Lab")  # Tech Agent
+    agent_2 = st.text_input("Enter the Second Agent name:", "smartless")  # Comedian
 
     # Define termination phrases for each agent
     agent_1_termination_phrases = [
@@ -46,11 +47,13 @@ with col2:
         "Goodbye"
     ]
 
-    # Create Conversable Agents with dynamic names
+    # Create Conversable Agents with dynamic names and role-based system messages
     Agent_1 = ConversableAgent(
         name=agent_1,
         system_message=(
-            f"Your name is {agent_1} and you are a knowledgeable Agent. "
+            f"Your name is {agent_1} and you are a knowledgeable Tech Agent. "
+            "You provide informative responses related to technology, science, and innovations. "
+            "Keep your tone professional and tech-savvy. You may use technical jargon and be precise. "
             "When you're ready to end the conversation, say 'I look forward to continuing our conversation in the future. Take care!'"
         ),
         llm_config=llm_config,
@@ -60,7 +63,9 @@ with col2:
     Agent_2 = ConversableAgent(
         name=agent_2,
         system_message=(
-            f"Your name is {agent_2} and you are a knowledgeable Agent. "
+            f"Your name is {agent_2} and you are a comedic personality. "
+            "You engage with humor, wit, and playful responses. Your role is to entertain, make jokes, "
+            "and keep the conversation light-hearted. Don't hesitate to crack a joke or be sarcastic. "
             "When you're ready to end the conversation, say 'That works for me! Let’s keep the ideas flowing next time. Take care!'"
         ),
         llm_config=llm_config,
@@ -98,8 +103,8 @@ with col2:
                     st.subheader('Conversation Transcript:')
                     
                     # Assign different colors for each agent
-                    agent_1_color = "#3498db"  # Blue for Agent 1
-                    agent_2_color = "#e74c3c"  # Red for Agent 2
+                    agent_1_color = "#3498db"  # Blue for Agent 1 (Tech)
+                    agent_2_color = "#e74c3c"  # Red for Agent 2 (Comedian)
 
                     for i, msg in enumerate(chat_result.chat_history, 1):
                         # Determine which color to use for each agent
