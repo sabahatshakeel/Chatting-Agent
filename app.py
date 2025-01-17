@@ -1,117 +1,72 @@
-import streamlit as st
-import os
 import openai
-#from dotenv import load_dotenv, find_dotenv
-from autogen import ConversableAgent
+import streamlit as st
+from autogen.agentchat import ConversableAgent
+from autogen.oai.client import OpenAIWrapper, OpenAIError
 
-# Load environment variables (e.g., OpenAI API key)
-#_ = load_dotenv(find_dotenv())  # Read local .env file
-#openai.api_key = os.environ.get('OPENAI_API_KEY')
+# Streamlit app title and introduction
+st.title("Conversable Agent Chat App")
+st.write("This app uses OpenAI's API to power intelligent agents that can chat with you.")
+
+# Ensure the OpenAI API key is set correctly from Streamlit secrets
 openai.api_key = st.secrets["API_KEY"]
 
-# Sidebar Layout (Column 1 for logo, company, and developers' names)
-with st.sidebar:
-    st.image("logo.jpg", width=150)  # Adjust the width of the logo
-    st.markdown("""
-        # Powered by Aibytec 
-        *Developers: Anum Zeeshan & Sajid Ameen*
-    """)
+# Define LLM config for the ConversableAgent
+llm_config = {
+    "model": "gpt-3.5-turbo",  # Specify the OpenAI model you're using
+    "api_key": openai.api_key   # Pass the API key from Streamlit secrets
+}
 
-# Main Layout (Column 2 for the rest of the app content)
-col1, col2 = st.columns([1, 5])  # 1:5 ratio for sidebar to content
+# Function to test if the OpenAI API key works and avoid API errors
+def test_openai_api():
+    try:
+        # Test the OpenAI API with a simple prompt
+        response = openai.Completion.create(
+            engine="text-davinci-003",
+            prompt="Say hello!",
+            max_tokens=5
+        )
+        # Display the response from the API
+        st.write("OpenAI API Test Response: ", response.choices[0].text.strip())
+    except openai.OpenAIError as e:
+        st.error(f"OpenAI API error: {e}")
+        st.stop()  # Stop the app if the API test fails
 
-with col2:
-    # Streamlit App Title
-    st.title('Conversable Agents')
+# Call the function to test the OpenAI API
+test_openai_api()
 
-    # Define the LLM configuration
-    llm_config = {"model": "gpt-3.5-turbo"}
-
-    # Termination message logic
-    def is_termination_msg(msg, termination_phrases):
-        """Check if a message contains any termination phrases."""
-        return any(phrase in msg["content"] for phrase in termination_phrases)
-
-    # User Input to define Agent names
-    st.subheader('Define Agent Names')
-    agent_1 = st.text_input("Enter the First Agent name:", "Agent-1")
-    agent_2 = st.text_input("Enter the Second Agent name:", "Agent-2")
-
-    # Define termination phrases for each agent
-    agent_1_termination_phrases = [
-        "I look forward to continuing our conversation in the future. Take care!"
-    ]
-    agent_2_termination_phrases = [
-        "That works for me! Let’s keep the ideas flowing next time. Take care!",
-        "Goodbye"
-    ]
-
-    # Create Conversable Agents with dynamic names
+# Try to create ConversableAgent instances with error handling
+try:
+    # Create the first agent with the provided LLM config
     Agent_1 = ConversableAgent(
-        name=agent_1,
-        system_message=(
-            f"Your name is {agent_1} and you are a knowledgeable Agent. "
-            "When you're ready to end the conversation, say 'I look forward to continuing our conversation in the future. Take care!'"
-        ),
-        llm_config=llm_config,
-        human_input_mode="NEVER"
+        name="Agent_1",
+        llm_config=llm_config  # Pass the validated LLM configuration
     )
 
+    # Optionally, create a second agent (you can remove this if only one agent is needed)
     Agent_2 = ConversableAgent(
-        name=agent_2,
-        system_message=(
-            f"Your name is {agent_2} and you are a knowledgeable Agent. "
-            "When you're ready to end the conversation, say 'That works for me! Let’s keep the ideas flowing next time. Take care!'"
-        ),
-        llm_config=llm_config,
-        human_input_mode="NEVER"
+        name="Agent_2",
+        llm_config=llm_config  # Same configuration for the second agent
     )
 
-    # User Input to define the start of the conversation
-    st.subheader('Start a Conversation')
+    # Interact with Agent 1 and display the response
+    agent_prompt = st.text_input("Type your message to Agent 1:", "Hello, how can you assist me?")
+    
+    if st.button("Send to Agent 1"):
+        # Send the user's message to the agent and get a response
+        agent_response = Agent_1.chat(agent_prompt)
+        st.write("Agent 1's response: ", agent_response)
 
-    # Text input for the first message from the user
-    initial_message = st.text_input(f'Define the start of the conversation (Message from {agent_2} to {agent_1}):', 
-                                    f'I\'m {agent_2}. {agent_1}, let\'s talk about any topic.')
+    # You can also add interactions with Agent 2 if needed
+    agent2_prompt = st.text_input("Type your message to Agent 2 (optional):", "Hi Agent 2, what can you do?")
+    
+    if st.button("Send to Agent 2"):
+        # Send the user's message to the second agent and get a response
+        agent2_response = Agent_2.chat(agent2_prompt)
+        st.write("Agent 2's response: ", agent2_response)
 
-    # Set number of turns for the conversation
-    max_turns = st.slider('Max turns for conversation:', 1, 10, 2)
-
-    # Button to initiate the conversation
-    if st.button('Start Conversation'):
-        if initial_message:  # Ensure the user has provided a starting message
-            try:
-                # Start the conversation between the two agents
-                chat_result = Agent_2.initiate_chat(
-                    recipient=Agent_1,
-                    message=initial_message,
-                    max_turns=max_turns,
-                )
-
-                # Display the conversation history in a professional, user-friendly way
-                st.subheader('Conversation Transcript:')
-                
-                # Assign different colors for each agent
-                agent_1_color = "#3498db"  # Blue for Agent 1
-                agent_2_color = "#e74c3c"  # Red for Agent 2
-
-                for i, msg in enumerate(chat_result.chat_history, 1):
-                    # Determine which color to use for each agent
-                    color = agent_1_color if msg['name'] == agent_1 else agent_2_color
-                    # Display the conversation with bold agent names, uppercase and colored text
-                    st.markdown(f"<strong style='text-transform: uppercase; color:{color};'>"
-                                f"TURN {i} ({msg['name']}):</strong> <span style='color:{color};'>{msg['content']}</span>", 
-                                unsafe_allow_html=True)
-
-                # Check for termination message
-                if len(chat_result.chat_history) > 0:
-                    last_message = chat_result.chat_history[-1]
-                    if is_termination_msg(last_message, agent_1_termination_phrases) or is_termination_msg(last_message, agent_2_termination_phrases):
-                        st.success("The conversation ended as per the termination logic.")
-                    else:
-                        st.info("The conversation is ongoing.")
-
-            except Exception as e:
-                st.error(f"An error occurred: {e}")
-        else:
-            st.warning("Please enter a valid start message.")
+except OpenAIError as e:
+    # Handle OpenAI-related errors (e.g., invalid API key, rate limits, etc.)
+    st.error(f"Failed to initialize agent due to OpenAI error: {e}")
+except Exception as ex:
+    # Handle any other unexpected errors
+    st.error(f"An unexpected error occurred: {ex}")
