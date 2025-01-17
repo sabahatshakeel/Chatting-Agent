@@ -93,9 +93,6 @@ with col2:
                     max_turns=max_turns,
                 )
 
-                # Debugging: Print the chat result to inspect it
-                st.write(f"Chat result: {chat_result}")
-
                 if chat_result is None:
                     st.error("Error: No chat history returned. Please check the ConversableAgent configuration.")
                 else:
