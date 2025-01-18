@@ -12,7 +12,7 @@ openai.api_key = os.getenv('OPENAI_API_KEY')  # Get the API key from the .env fi
 
 # Sidebar Layout (Column 1 for logo, company, and developers' names)
 with st.sidebar:
-    st.image("logo.png", width=350)  # Adjust the width of the logo
+    st.image("logo.png", width=320)  # Adjust the width of the logo
     st.markdown("""
         # Powered by Aibytec 
         *Developers: Anum Zeeshan & Sabahat Shakeel*
