@@ -1,8 +1,6 @@
-pyautogen
-chess
-matplotlib
-numpy
-pandas
-yfinance
+streamlit
 openai==1.58 
+python-dotenv
+autogen
+
 
